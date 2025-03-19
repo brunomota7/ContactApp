@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import api from "../services/api";
-import { ActivityIndicator, Text, View, FlatList, StyleSheet } from "react-native";
+import { ActivityIndicator, Text, View, FlatList, StyleSheet, TouchableOpacity } from "react-native";
 
 interface Contact {
     id: number;
@@ -9,7 +9,7 @@ interface Contact {
     phone: string;
 }
 
-const HomeScreen = () => {
+const HomeScreen = ({ navigation }: any) => {
     const [contacts, setContact] = useState<Contact[]>([]);
     const [loading, setLoading] = useState(true);
 
@@ -47,6 +47,11 @@ const HomeScreen = () => {
                     )}
                 />
             )}
+
+            {/* Button para adicionar contato */}
+            <TouchableOpacity style={styles.addButton} onPress={() => navigation.navigate('AddContact')}>
+                <Text style={styles.addButtonText}>+ Adicionar Contato</Text>
+            </TouchableOpacity>
         </View>
     );
 };
@@ -76,6 +81,18 @@ const styles = StyleSheet.create({
     },
     contactName: {
         fontSize: 18,
+        fontWeight: 'bold',
+    },
+    addButton: {
+        marginTop: 20,
+        backgroundColor: '#007bff',
+        padding: 15,
+        borderRadius: 8,
+        alignItems: 'center',
+    },
+    addButtonText: {
+        color: '#fff',
+        fontSize: 16,
         fontWeight: 'bold',
     },
 });
