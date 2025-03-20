@@ -2,13 +2,8 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { View, Text, FlatList, StyleSheet, ActivityIndicator, TouchableOpacity, RefreshControl } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import api from '../services/api';
-
-interface Contact {
-  id: number;
-  name: string;
-  email: string;
-  phone: string;
-}
+import { Pencil, Trash2 } from 'lucide-react-native';
+import Contact from '../models/Contact';
 
 const HomeScreen = ({ navigation }: any) => {
   const [contacts, setContacts] = useState<Contact[]>([]);
@@ -20,11 +15,22 @@ const HomeScreen = ({ navigation }: any) => {
     try {
       setLoading(true);
       const response = await api.get('/listar');
-      setContacts(response.data);
+      const cleanData = JSON.parse(JSON.stringify(response.data));
+      setContacts(cleanData);
     } catch (error) {
       console.error('Erro ao buscar contatos:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Função para deletar contato
+  const deleteContact = async (id: number) => {
+    try {
+      await api.delete(`/delete/${id}`);
+      setContacts(contacts.filter(contact => contact.id !== id)); // Atualiza a lista local
+    } catch (error) {
+      console.error('Erro ao deletar contato:', error); 
     }
   };
 
@@ -44,10 +50,14 @@ const HomeScreen = ({ navigation }: any) => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Lista de Contatos</Text>
+      {/* <Text style={styles.title}>Lista de Contatos</Text> */}
+
+      <TouchableOpacity style={styles.addButton} onPress={() => navigation.navigate('AddContact')}>
+        <Text style={styles.addButtonText}>+ Adicionar Contato</Text>
+      </TouchableOpacity>
 
       {loading ? (
-        <ActivityIndicator size="large" color="#007bff" />
+        <ActivityIndicator size="large" color="#4CAF50" />
       ) : (
         <FlatList
           data={contacts}
@@ -57,17 +67,31 @@ const HomeScreen = ({ navigation }: any) => {
           }
           renderItem={({ item }) => (
             <View style={styles.contactCard}>
-              <Text style={styles.contactName}>{item.name}</Text>
-              <Text>{item.email}</Text>
-              <Text>{item.phone}</Text>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.contactName}>{item.name}</Text>
+                <Text style={styles.contactInfo}>{item.email}</Text>
+                <Text style={styles.contactInfo}>{item.phone}</Text>
+              </View>
+
+              <View style={styles.actions}>
+                <TouchableOpacity
+                  style={styles.editButton}
+                  onPress={() => navigation.navigate('EditContact', { contact: item })}
+                >
+                  <Pencil size={24} color="#fff" />
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={styles.deleteButton}
+                  onPress={() => deleteContact(item.id)}
+                >
+                  <Trash2 size={24} color="#fff" />
+                </TouchableOpacity>
+              </View>
             </View>
           )}
         />
       )}
-
-      <TouchableOpacity style={styles.addButton} onPress={() => navigation.navigate('AddContact')}>
-        <Text style={styles.addButtonText}>+ Adicionar Contato</Text>
-      </TouchableOpacity>
     </View>
   );
 };
@@ -76,39 +100,68 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 20,
-    backgroundColor: '#f8f9fa',
+    backgroundColor: '#f4f4f4',
   },
   title: {
-    fontSize: 24,
-    fontWeight: 'bold',
+    fontSize: 28,
+    fontWeight: '600',
+    color: '#333',
     textAlign: 'center',
-    marginBottom: 20,
+    marginBottom: 30,
   },
   contactCard: {
     backgroundColor: '#fff',
     padding: 15,
-    marginBottom: 10,
-    borderRadius: 10,
+    marginBottom: 12,
+    borderRadius: 15,
     shadowColor: '#000',
-    shadowOpacity: 0.1,
-    shadowOffset: { width: 0, height: 2 },
-    shadowRadius: 4,
-    elevation: 3,
+    shadowOpacity: 0.12,
+    shadowOffset: { width: 0, height: 5 },
+    shadowRadius: 8,
+    elevation: 4,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
   contactName: {
     fontSize: 18,
     fontWeight: 'bold',
+    color: '#333',
+  },
+  contactInfo: {
+    fontSize: 14,
+    color: '#666',
+  },
+  actions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  editButton: {
+    backgroundColor: '#FFCA28',
+    padding: 10,
+    borderRadius: 8,
+    marginLeft: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  deleteButton: {
+    backgroundColor: '#E53935',
+    padding: 10,
+    borderRadius: 8,
+    marginLeft: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   addButton: {
-    marginTop: 20,
-    backgroundColor: '#007bff',
+    marginBottom: 30,
+    backgroundColor: '#4CAF50',
     padding: 15,
-    borderRadius: 8,
+    borderRadius: 25,
     alignItems: 'center',
   },
   addButtonText: {
     color: '#fff',
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: 'bold',
   },
 });

@@ -1,25 +1,25 @@
 import { useState } from "react";
 import { Alert, StyleSheet, Text, TextInput, TouchableOpacity, View, KeyboardAvoidingView, ScrollView, Platform } from "react-native";
 import api from "../services/api";
+import Contact from "../models/Contact";
 
-const AddContactScreen = ({ navigation }: any) => {
-    const [name, setName] = useState('');
-    const [email, setEmail] = useState('');
-    const [phone, setPhone] = useState('');
+const EditContactScreen = ({ route, navigation }: any) => {
+    const { contact } = route.params; // Pega os dados do contato enviado via navigation
+    const [name, setName] = useState(contact.name);
+    const [email, setEmail] = useState(contact.email);
+    const [phone, setPhone] = useState(contact.phone);
 
-    const handleAddContact = async () => {
-        if (!name || !email || !phone) {
-            Alert.alert('Erro', 'Por favor, preencha todos os campos.');
-            return;
-        }
-
+    const updateContact = async () => {
         try {
-            await api.post('/add', { name, email, phone });
-            Alert.alert('Sucesso', 'Contato adicionado com sucesso!');
-            navigation.goBack(); // Volta para a tela anterior
+            const updatedContact = { name, email, phone };
+            await api.put(`/atualizar/${contact.id}`, updatedContact);
+            Alert.alert('Sucesso', 'Contato atualizado com sucesso!');
+            
+            // Atualiza os contatos antes de voltar
+            navigation.goBack({ shouldRefresh: true });
         } catch (error) {
-            Alert.alert('Erro', 'Não foi possível adicionar o contato.');
-            console.log(error);
+            console.error('Erro ao atualizar contato:', error);
+            Alert.alert('Erro', 'Não foi possível atualizar o contato.');
         }
     };
 
@@ -29,7 +29,7 @@ const AddContactScreen = ({ navigation }: any) => {
             style={styles.container}
         >
             <ScrollView contentContainerStyle={styles.scrollView}>
-                {/* <Text style={styles.title}>Adicionar Contato</Text> */}
+                {/* <Text style={styles.title}>Editar Contato</Text> */}
 
                 <TextInput 
                     style={styles.input}
@@ -41,21 +41,21 @@ const AddContactScreen = ({ navigation }: any) => {
                 <TextInput 
                     style={styles.input}
                     placeholder="E-mail"
-                    keyboardType="email-address"
                     value={email}
                     onChangeText={setEmail}
+                    keyboardType="email-address"
                 />
 
                 <TextInput 
                     style={styles.input}
                     placeholder="Telefone"
-                    keyboardType="phone-pad"
                     value={phone}
                     onChangeText={setPhone}
+                    keyboardType="phone-pad"
                 />
 
-                <TouchableOpacity style={styles.button} onPress={handleAddContact}>
-                    <Text style={styles.buttonText}>Adicionar</Text>
+                <TouchableOpacity style={styles.saveButton} onPress={updateContact}>
+                    <Text style={styles.saveButtonText}>Salvar</Text>
                 </TouchableOpacity>
             </ScrollView>
         </KeyboardAvoidingView>
@@ -89,18 +89,18 @@ const styles = StyleSheet.create({
         fontSize: 16,
         color: '#495057',
     },
-    button: {
+    saveButton: {
         backgroundColor: '#007bff',
         padding: 15,
         borderRadius: 10,
         alignItems: 'center',
         marginTop: 20,
     },
-    buttonText: {
+    saveButtonText: {
         color: '#fff',
         fontSize: 18,
         fontWeight: 'bold',
     },
 });
 
-export default AddContactScreen;
+export default EditContactScreen;
